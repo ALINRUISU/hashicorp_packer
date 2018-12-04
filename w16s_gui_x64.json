@@ -2,29 +2,53 @@
     "builders": [
         {
         "type": "virtualbox-iso",
-		"guest_os_type": "Windows2016_64",
-        "output_directory": "output-window2016-base/",
-        "iso_url": "iso/en_windows_server_2016_x64_dvd_9718492.iso",
-        "shutdown_command": "shutdown /s /t 10 /f /d p:4:1 /c \"Packer Shutdown\"",
+        "guest_os_type": "Windows2016_64",
+        "output_directory": "./output-window2016-base/",
+        "iso_url": "./iso/en_windows_server_2016_x64_dvd_9718492.iso",
+        "shutdown_command": "a:/sysprep.bat",
         "cpu": "2",
         "disk_size" : "20000",
         "floppy_files": [
-            "configuration/microsoft-updates.bat",
-            "configuration/win-updates.ps1",
-            "configuratoin/"
+            "./customization/microsoft/sysprep.bat",
+            "./customization/microsoft/windows2016/unattend.xml",
+            "./customization/microsoft/enable-remotedesktop.bat",
+            "./customization/microsoft/enable-winrm.ps1",
+            "./configuration/microsoft/install-chocolatey.ps1"
           ],
-     
+        "guest_additions_mode": "disable",
+        "communicator": "winrm",
+        "headless": false,
+        "winrm_insecure": true,
+        "winrm_password": "vagrant",
+        "winrm_port": "5986",
+        "winrm_use_ssl": true,
+        "winrm_username": "vagrant"
+
         }        
     ],
     "provisioners": [
-   
+        {
+            "type": "powershell",
+            "script": "scripts/windows-updates.ps1",
+            "elevated_user": "vagrant",
+            "elevated_password": "vagrant"
+          },
+          {
+            "type": "windows-restart",
+            "restart_timeout": "15m"
+          },
+          {
+            "type": "powershell",
+            "script": "scripts/after-reboot.ps1",
+            "elevated_user": "vagrant",
+            "elevated_password": "vagrant"
+          }
     ],
     "post-processors": [
         {
         "type": "vagrant",
         "keep_input_artifact": false,
-        "output": "windows_2016_{{.Provider}}.box",
-        "vagrantfile_template": "vagrantfile-windows_2016.template"
+        "output": "windows_2016_virtualbox.box",
         }
     ]
   }
